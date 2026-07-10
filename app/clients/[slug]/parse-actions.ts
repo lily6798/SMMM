@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { extractWeeklyRows } from "@/lib/anthropic";
 import { SLOT_COLUMNS, TEXT_EXTENSIONS } from "@/lib/uploads";
+import { refreshFlags } from "@/lib/flags";
 
 export async function parseUpload(
   uploadId: string,
@@ -118,6 +119,7 @@ export async function parseUpload(
   }
 
   await supabase.from("uploads").update({ dataset_id: dataset.id }).eq("id", upload.id);
+  await refreshFlags(supabase, dataset.id);
 
   revalidatePath(`/clients/${slug}`);
   revalidatePath(`/clients/${slug}/qa`);
