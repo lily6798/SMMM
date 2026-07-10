@@ -112,7 +112,7 @@ export default async function IntakePage({
         Under 52 weeks? Data collection starts now regardless — this just tracks when the client crosses the modellable threshold.
       </div>
 
-      <H2 hint="Upload the source files for each category, then click Parse to have Claude read the file and extract weekly rows. CSV/TSV/TXT only for now — Excel and PDF support is coming.">
+      <H2 hint="Upload the source files for each category, then click Parse to have Claude read the file and extract weekly rows. Accepts CSV, TSV, TXT and Excel (.xlsx/.xls). PDF isn't supported yet.">
         Intake Status
       </H2>
       <div style={{ ...cardStyle, padding: 22 }}>

@@ -3,8 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { extractWeeklyRows } from "@/lib/anthropic";
-import { SLOT_COLUMNS, TEXT_EXTENSIONS } from "@/lib/uploads";
+import { SLOT_COLUMNS } from "@/lib/uploads";
 import { refreshFlags } from "@/lib/flags";
+import { extractTextFromFile, SUPPORTED_EXTENSIONS } from "@/lib/parseFile";
 
 export async function parseUpload(
   uploadId: string,
@@ -26,16 +27,6 @@ export async function parseUpload(
     return { ok: false, message: uploadFetchError?.message ?? "Upload not found." };
   }
 
-  const isText = TEXT_EXTENSIONS.some((ext) =>
-    upload.original_filename.toLowerCase().endsWith(ext),
-  );
-  if (!isText) {
-    return {
-      ok: false,
-      message: "Only CSV/TSV/TXT files can be parsed right now — Excel and PDF support is coming.",
-    };
-  }
-
   const targetColumns = SLOT_COLUMNS[upload.slot] ?? [];
   if (targetColumns.length === 0) {
     return { ok: false, message: `No column mapping defined for slot "${upload.slot}" yet.` };
@@ -47,7 +38,17 @@ export async function parseUpload(
   if (downloadError || !fileBlob) {
     return { ok: false, message: downloadError?.message ?? "Could not download file." };
   }
-  const fileText = await fileBlob.text();
+
+  const fileText = await extractTextFromFile(fileBlob, upload.original_filename);
+  if (fileText === null) {
+    return {
+      ok: false,
+      message: `Unsupported file type — SMMM can parse ${SUPPORTED_EXTENSIONS.join(", ")} files.`,
+    };
+  }
+  if (fileText.trim().length === 0) {
+    return { ok: false, message: "Couldn't extract any text from this file — it may be a scanned image PDF." };
+  }
 
   const rows = await extractWeeklyRows(fileText, targetColumns);
   if (rows.length === 0) {
