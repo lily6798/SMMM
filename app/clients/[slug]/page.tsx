@@ -5,6 +5,7 @@ import { getClientBySlug, weeksOfHistory, coverageStatus } from "@/lib/clients";
 import { updateDataCoverage } from "./actions";
 import { UploadButton } from "@/components/UploadButton";
 import { ViewFileLink } from "@/components/ViewFileLink";
+import { ParseButton } from "@/components/ParseButton";
 
 const UPLOAD_SLOTS = [
   { slot: "kpi", label: "KPI export (booking system / GA4 / CRM)" },
@@ -32,7 +33,7 @@ export default async function IntakePage({
   const supabase = await createClient();
   const { data: uploads } = await supabase
     .from("uploads")
-    .select("slot, original_filename, file_path, uploaded_at")
+    .select("id, slot, original_filename, file_path, dataset_id, uploaded_at")
     .eq("client_id", client.id);
 
   const uploadedSlots = new Map((uploads ?? []).map((u) => [u.slot, u]));
@@ -111,7 +112,7 @@ export default async function IntakePage({
         Under 52 weeks? Data collection starts now regardless — this just tracks when the client crosses the modellable threshold.
       </div>
 
-      <H2 hint="Upload the source files for each category. Files land in Supabase Storage, scoped to this client only. Parsing them into weekly model rows automatically is the next piece — for now, uploaded files are just stored and viewable.">
+      <H2 hint="Upload the source files for each category, then click Parse to have Claude read the file and extract weekly rows. CSV/TSV/TXT only for now — Excel and PDF support is coming.">
         Intake Status
       </H2>
       <div style={{ ...cardStyle, padding: 22 }}>
@@ -134,7 +135,11 @@ export default async function IntakePage({
                 <span style={{ display: "flex", alignItems: "center", gap: 10, color: CHARCOAL, fontSize: 12 }}>
                   {uploaded.original_filename}
                   <ViewFileLink path={uploaded.file_path} />
-                  <span style={{ color: "#2E7D32", fontWeight: 700 }}>✓</span>
+                  {uploaded.dataset_id ? (
+                    <span style={{ color: "#2E7D32", fontWeight: 700 }}>Parsed ✓</span>
+                  ) : (
+                    <ParseButton uploadId={uploaded.id} slug={slug} />
+                  )}
                 </span>
               ) : (
                 <UploadButton clientId={client.id} slot={slot} />
