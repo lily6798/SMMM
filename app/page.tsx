@@ -18,6 +18,10 @@ const TEMPLATES = [
     n: "Manual Media Log",
     d: "For sponsorships, press and handshake deals — dates + cost, we spread it weekly.",
   },
+  {
+    n: "Monthly KPI Tracking",
+    d: "For clients without an automated KPI export — enter revenue/conversions by month, we spread it across the weeks that fall in it.",
+  },
 ];
 
 export default async function Home() {
