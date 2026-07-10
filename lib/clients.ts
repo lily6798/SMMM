@@ -1,4 +1,6 @@
+import { cache } from "react";
 import { CHARCOAL } from "@/components/ui";
+import { createClient } from "@/lib/supabase/server";
 
 export const STATUS_CHIP: Record<
   string,
@@ -29,3 +31,31 @@ export function weeksOfHistory(
   const later = Math.max(new Date(kpiFrom).getTime(), new Date(mediaFrom).getTime());
   return Math.max(0, Math.floor((Date.now() - later) / WEEK_MS));
 }
+
+export function coverageStatus(weeks: number | null) {
+  if (weeks === null) return null;
+  if (weeks < 52)
+    return { t: "Not yet modellable — keep collecting", bg: "#FFE9A8", c: "#8A6400" };
+  if (weeks < 104)
+    return { t: "Directional model — wider uncertainty", bg: "#FFF3D6", c: "#8A6400" };
+  return { t: "Full model — good history", bg: "#E8F5E9", c: "#2E7D32" };
+}
+
+export type ClientRow = {
+  id: string;
+  slug: string;
+  name: string;
+  status: string;
+  kpi_data_from: string | null;
+  media_data_from: string | null;
+};
+
+export const getClientBySlug = cache(async (slug: string): Promise<ClientRow | null> => {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("clients")
+    .select("id, slug, name, status, kpi_data_from, media_data_from")
+    .eq("slug", slug)
+    .maybeSingle();
+  return data;
+});
