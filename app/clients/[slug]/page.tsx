@@ -3,6 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 import { H2, cardStyle, GOLD, CHARCOAL, LINE_GREY } from "@/components/ui";
 import { getClientBySlug, weeksOfHistory, coverageStatus } from "@/lib/clients";
 import { updateDataCoverage } from "./actions";
+import { UploadButton } from "@/components/UploadButton";
+import { ViewFileLink } from "@/components/ViewFileLink";
 
 const UPLOAD_SLOTS = [
   { slot: "kpi", label: "KPI export (booking system / GA4 / CRM)" },
@@ -30,7 +32,7 @@ export default async function IntakePage({
   const supabase = await createClient();
   const { data: uploads } = await supabase
     .from("uploads")
-    .select("slot, original_filename, uploaded_at")
+    .select("slot, original_filename, file_path, uploaded_at")
     .eq("client_id", client.id);
 
   const uploadedSlots = new Map((uploads ?? []).map((u) => [u.slot, u]));
@@ -109,7 +111,7 @@ export default async function IntakePage({
         Under 52 weeks? Data collection starts now regardless — this just tracks when the client crosses the modellable threshold.
       </div>
 
-      <H2 hint="Real upload status for this client — nothing here is faked. Uploading files and automatically parsing them isn't built yet, so slots show as pending until that lands.">
+      <H2 hint="Upload the source files for each category. Files land in Supabase Storage, scoped to this client only. Parsing them into weekly model rows automatically is the next piece — for now, uploaded files are just stored and viewable.">
         Intake Status
       </H2>
       <div style={{ ...cardStyle, padding: 22 }}>
@@ -129,17 +131,13 @@ export default async function IntakePage({
             >
               <span style={{ fontWeight: 500 }}>{label}</span>
               {uploaded ? (
-                <span style={{ color: CHARCOAL, fontSize: 12 }}>
-                  {uploaded.original_filename} <span style={{ color: "#2E7D32", fontWeight: 700, marginLeft: 8 }}>✓</span>
+                <span style={{ display: "flex", alignItems: "center", gap: 10, color: CHARCOAL, fontSize: 12 }}>
+                  {uploaded.original_filename}
+                  <ViewFileLink path={uploaded.file_path} />
+                  <span style={{ color: "#2E7D32", fontWeight: 700 }}>✓</span>
                 </span>
               ) : (
-                <button
-                  disabled
-                  title="Upload isn't built yet"
-                  style={{ background: "#F2F2F2", color: "#AAA", border: "none", borderRadius: 999, padding: "6px 14px", fontWeight: 700, fontSize: 10.5, textTransform: "uppercase", cursor: "not-allowed" }}
-                >
-                  Not uploaded
-                </button>
+                <UploadButton clientId={client.id} slot={slot} />
               )}
             </div>
           );
