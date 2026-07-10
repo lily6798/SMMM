@@ -42,6 +42,22 @@ export default async function Home() {
           Clients
         </H2>
 
+        <Link
+          href="/example"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
+            fontSize: 12,
+            fontWeight: 700,
+            color: GOLD,
+            textDecoration: "none",
+            marginBottom: 18,
+          }}
+        >
+          Not sure what a finished model looks like? See an example →
+        </Link>
+
         {error && (
           <p style={{ color: "#C62828" }}>Failed to load clients: {error.message}</p>
         )}
